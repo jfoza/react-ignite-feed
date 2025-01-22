@@ -3,43 +3,43 @@ import {Comment} from "./Comment.jsx";
 import {Avatar} from "./Avatar.jsx";
 import { format, formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale/pt-BR'
-import {useState} from "react";
-import { v4 as uuidv4 } from 'uuid';
+import {useState, FormEvent, ChangeEvent, InvalidEvent} from "react";
+import { v4 as uuid4 } from 'uuid';
+import {IPost} from "../App.tsx";
 
-export function Post({ author, content, publishedAt }) {
-  const [comments, setComments] = useState([])
+export interface IComment {
+  id: string,
+  content: string,
+}
+
+export function Post({ author, content, publishedAt }: Readonly<IPost>) {
+  const [comments, setComments] = useState<IComment[]>([]);
 
   const [newCommentText, setNewCommentText] = useState('')
 
-  const isValidDate = publishedAt instanceof Date && !isNaN(publishedAt);
+  const publishedAtFormatted = format(publishedAt, "d 'de' LLLL 'às' HH:mm'h'", { locale: ptBR });
 
-  const publishedAtFormatted = isValidDate
-    ? format(publishedAt, "d 'de' LLLL 'às' HH:mm'h'", { locale: ptBR })
-    : 'Data inválida';
-
-  const publishedDateRelativeToNow = isValidDate
-    ? formatDistanceToNow(publishedAt, { locale: ptBR, addSuffix: true })
-    : 'Data inválida';
+  const publishedDateRelativeToNow = formatDistanceToNow(publishedAt, { locale: ptBR, addSuffix: true });
 
   const isNewCommentEmpty = newCommentText.length === 0
 
-  function handleCreateNewComment() {
+  function handleCreateNewComment(event: FormEvent) {
     event.preventDefault();
 
-    setComments([...comments, {id: uuidv4(), content: newCommentText}])
+    setComments([...comments, { id: uuid4(), content: newCommentText }])
     setNewCommentText('')
   }
 
-  function handleNewCommentChange() {
+  function handleNewCommentChange(event: ChangeEvent<HTMLTextAreaElement>) {
     event.target.setCustomValidity("")
     setNewCommentText(event.target.value)
   }
 
-  function handleNewCommentInvalid() {
+  function handleNewCommentInvalid(event: InvalidEvent<HTMLTextAreaElement>) {
     event.target.setCustomValidity("Este campo é obrigatório.")
   }
 
-  function handleDeleteComment(commentId) {
+  function handleDeleteComment(commentId: string) {
     const commentsWithoutDeletedOne = comments.filter((comment) => comment.id !== commentId)
 
     setComments(commentsWithoutDeletedOne)
@@ -57,7 +57,7 @@ export function Post({ author, content, publishedAt }) {
           </div>
         </div>
 
-        <time title={publishedAtFormatted} dateTime={isValidDate ? publishedAt.toISOString() : undefined}>
+        <time title={publishedAtFormatted} dateTime={publishedAt.toISOString()}>
           {publishedDateRelativeToNow}
         </time>
       </header>
